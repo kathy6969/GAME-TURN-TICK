@@ -2,20 +2,20 @@
 
 public class ThanhQuay : MonoBehaviour
 {
+    public Transform pointA, pointB;
+    public float speed = 100f;
+    public float stopThreshold = 0.5f;
+    public float leaveThreshold = 0.2f;
+
+    public QuanLyDiemDung quanLyDiemDung;
+
     private bool isRotating = false;
     private Transform pivot;
-    public float speed = 100f;
 
-    public Transform pointA, pointB;
-    public Transform[] diemDung;
-    public float stopThreshold = 0.5f;
-
-    // Thêm biến kiểm tra đã rời khỏi tâm chưa
-    private bool hasLeftPivot = false;
-    public float leaveThreshold = 0.1f; // khoảng cách để xác nhận đã rời tâm
+    private bool hasLeftStart = false;
+    private Vector3 startPosition;
 
     public bool IsRotating => isRotating;
-    public Transform CurrentPivot => pivot;
 
     void Update()
     {
@@ -25,28 +25,22 @@ public class ThanhQuay : MonoBehaviour
 
             Transform diemDangQuay = (pivot == pointA) ? pointB : pointA;
 
-            float distanceFromPivot = Vector3.Distance(diemDangQuay.position, pivot.position);
+            float distance = Vector3.Distance(diemDangQuay.position, startPosition);
 
-            if (!hasLeftPivot)
+            if (!hasLeftStart)
             {
-                // Kiểm tra xem điểm còn lại đã rời khỏi tâm đủ chưa
-                if (distanceFromPivot > leaveThreshold)
+                if (distance > leaveThreshold)
                 {
-                    hasLeftPivot = true;
-                    Debug.Log($"{diemDangQuay.name} đã rời khỏi tâm {pivot.name}");
+                    hasLeftStart = true;
+                    Debug.Log("Đã rời khỏi vị trí bắt đầu");
                 }
             }
             else
             {
-                // Đã rời tâm, bắt đầu kiểm tra va chạm với điểm dừng
-                foreach (Transform diem in diemDung)
+                if (quanLyDiemDung != null && quanLyDiemDung.KiemTraChamDiem(diemDangQuay, stopThreshold))
                 {
-                    if (Vector3.Distance(diemDangQuay.position, diem.position) <= stopThreshold)
-                    {
-                        Debug.Log($"{diemDangQuay.name} chạm {diem.name}, dừng quay");
-                        StopRotation();
-                        break;
-                    }
+                    Debug.Log($"{diemDangQuay.name} chạm điểm dừng, DỪNG QUAY");
+                    StopRotation();
                 }
             }
         }
@@ -58,7 +52,11 @@ public class ThanhQuay : MonoBehaviour
         {
             pivot = newPivot;
             isRotating = true;
-            hasLeftPivot = false; // reset trạng thái mỗi lần bắt đầu quay
+            hasLeftStart = false;
+
+            // Ghi nhớ vị trí bắt đầu của điểm kia
+            startPosition = (pivot == pointA) ? pointB.position : pointA.position;
+
             Debug.Log("Bắt đầu quay quanh: " + pivot.name);
         }
     }
@@ -67,7 +65,5 @@ public class ThanhQuay : MonoBehaviour
     {
         isRotating = false;
         pivot = null;
-        hasLeftPivot = false;
-        Debug.Log("Dừng quay");
     }
 }
