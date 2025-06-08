@@ -4,9 +4,11 @@ public class ChuongKichHoat : MonoBehaviour
 {
     public DiemDungCoKichHoat diemLienKet;
 
-    // SpriteRenderer và 2 sprite cho chuông
     public Sprite spriteChuaKichHoat;
     public Sprite spriteDaKichHoat;
+
+    public AudioClip amThanhChuong; // Âm thanh khi chạm vào chuông
+    private AudioSource audioSource;
 
     private SpriteRenderer spriteRenderer;
     private bool duocKichHoat = false;
@@ -14,6 +16,11 @@ public class ChuongKichHoat : MonoBehaviour
     void Awake()
     {
         spriteRenderer = GetComponent<SpriteRenderer>();
+        audioSource = GetComponent<AudioSource>();
+        if (audioSource == null)
+        {
+            audioSource = gameObject.AddComponent<AudioSource>();
+        }
         CapNhatHinh();
     }
 
@@ -21,14 +28,17 @@ public class ChuongKichHoat : MonoBehaviour
     {
         if (other.CompareTag("ThanhQuay"))
         {
-            // Toggle trạng thái chuông
             duocKichHoat = !duocKichHoat;
             CapNhatHinh();
 
-            // Toggle trạng thái điểm dừng liên kết
             if (diemLienKet != null)
             {
                 diemLienKet.ToggleKichHoat();
+            }
+
+            if (amThanhChuong != null && audioSource != null)
+            {
+                audioSource.PlayOneShot(amThanhChuong);
             }
 
             Debug.Log("Chuông đã được kích hoạt/tắt và điểm dừng cũng đổi trạng thái.");

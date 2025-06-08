@@ -9,13 +9,26 @@ public class ThanhQuay : MonoBehaviour
 
     public QuanLyDiemDung quanLyDiemDung;
 
+    public AudioClip amThanhDungLai;
+    private AudioSource audioSource;
+
     private bool isRotating = false;
     private Transform pivot;
 
     private bool hasLeftStart = false;
     private Vector3 startPosition;
 
+    private float startTime;
+    public float GetStartTime() => startTime;
+
     public bool IsRotating => isRotating;
+
+    void Start()
+    {
+        audioSource = GetComponent<AudioSource>();
+        if (audioSource == null)
+            audioSource = gameObject.AddComponent<AudioSource>();
+    }
 
     void Update()
     {
@@ -24,7 +37,6 @@ public class ThanhQuay : MonoBehaviour
             transform.RotateAround(pivot.position, Vector3.forward, speed * Time.deltaTime);
 
             Transform diemDangQuay = (pivot == pointA) ? pointB : pointA;
-
             float distance = Vector3.Distance(diemDangQuay.position, startPosition);
 
             if (!hasLeftStart)
@@ -32,14 +44,12 @@ public class ThanhQuay : MonoBehaviour
                 if (distance > leaveThreshold)
                 {
                     hasLeftStart = true;
-                    Debug.Log("Đã rời khỏi vị trí bắt đầu");
                 }
             }
             else
             {
                 if (quanLyDiemDung != null && quanLyDiemDung.KiemTraChamDiem(diemDangQuay, stopThreshold))
                 {
-                    Debug.Log($"{diemDangQuay.name} chạm điểm dừng, DỪNG QUAY");
                     StopRotation();
                 }
             }
@@ -53,11 +63,9 @@ public class ThanhQuay : MonoBehaviour
             pivot = newPivot;
             isRotating = true;
             hasLeftStart = false;
-
-            // Ghi nhớ vị trí bắt đầu của điểm kia
             startPosition = (pivot == pointA) ? pointB.position : pointA.position;
 
-            Debug.Log("Bắt đầu quay quanh: " + pivot.name);
+            startTime = Time.time;  // Ghi lại thời gian bắt đầu quay
         }
     }
 
@@ -65,5 +73,25 @@ public class ThanhQuay : MonoBehaviour
     {
         isRotating = false;
         pivot = null;
+
+        if (amThanhDungLai != null && audioSource != null)
+        {
+            audioSource.PlayOneShot(amThanhDungLai);
+        }
+    }
+
+    // Hàm mới trả về thời gian đã quay (giây)
+    public float GetElapsedTime()
+    {
+        if (!isRotating)
+        {
+            // Nếu đang dừng thì trả về thời gian tính từ start đến bây giờ
+            return Time.time - startTime;
+        }
+        else
+        {
+            // Nếu đang quay thì trả về thời gian hiện tại
+            return Time.time - startTime;
+        }
     }
 }
